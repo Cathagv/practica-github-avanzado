@@ -3,10 +3,10 @@ feature/mi-feature
 
 Añadida feature: feature/mi-feature
 
-AppVersion-1 (2026-11-23 14:15:03)
+AppVersion-2 (2026-11-23 14:19:34)
 develop
 
 Añadida feature: feature/mi-feature
 
-AppVersion-1 (2026-11-23 14:15:03)
+AppVersion-2 (2026-11-23 14:19:34)
 main
