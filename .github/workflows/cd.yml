@@ -1,0 +1,47 @@
+name: CD - Main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - name: Incrementar versión en README
+        run: |
+          ACTUAL=$(grep -oE 'AppVersion-[0-9]+' README.md | head -n1 | cut -d'-' -f2)
+          NUEVA=$((ACTUAL + 1))
+          FECHA=$(date '+%Y-%m-%d %H:%M:%S')
+          sed -i "s/AppVersion-$ACTUAL.*/AppVersion-$NUEVA ($FECHA)/" README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: subir a AppVersion-$NUEVA" || exit 0
+          git push
+
+  validate-prod:
+    needs: update-version
+    runs-on: self-hosted
+    steps:
+      - name: Validar PROD_TOKEN contra LOCAL_PROD_TOKEN
+        shell: powershell
+        env:
+          SECRET_PROD: ${{ secrets.PROD_TOKEN }}
+        run: |
+          if ($env:SECRET_PROD -eq $env:LOCAL_PROD_TOKEN) {
+            Write-Output "Token PROD validado correctamente"
+          } else {
+            Write-Error "Error: PROD_TOKEN no coincide con LOCAL_PROD_TOKEN"
+            exit 1
+          }
